@@ -16,23 +16,24 @@ def get_all_files(source_dir):
     return files
 
 def bytes_to_human(n):
-    for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
+    for unit in ['B', 'KiB', 'MiB', 'GiB', 'TiB']:
         if n < 1024.0:
             return f"{n:.2f} {unit}"
         n /= 1024.0
-    return f"{n:.2f} PB"
+    return f"{n:.2f} PiB"
 
 def parse_drive_specs(drive_specs):
     drives = []
     for spec in drive_specs:
         if ':' not in spec:
-            raise ValueError(f"Invalid drive spec format: {spec}. Use LABEL:SIZE_GB format.")
+            raise ValueError(f"Invalid drive spec format: {spec}. Use LABEL:SIZE_MiB format.")
         label, size_str = spec.split(':', 1)
         try:
-            size_gb = int(size_str)
+            size_mib = int(size_str)
         except ValueError:
             raise ValueError(f"Invalid size for {label}: {size_str} must be an integer.")
-        drives.append((label, size_gb * 1024**3))
+        size_bytes = size_mib * 1024**2
+        drives.append((label, size_bytes))
     return drives
 
 def distribute_files(files, drives):
@@ -68,9 +69,9 @@ def copy_files(allocation, base_output_path, dry_run=True):
                 shutil.copy2(fpath, dest)
 
 def main():
-    parser = argparse.ArgumentParser(description="Distribute files across multiple drives using label:size pairs.")
+    parser = argparse.ArgumentParser(description="Distribute files across drives using LABEL:SIZE_MiB.")
     parser.add_argument("--source", required=True, help="Source directory to back up")
-    parser.add_argument("--drive", required=True, action='append', help="Drive spec format: LABEL:SIZE_GB (e.g., 'Media1:3000')")
+    parser.add_argument("--drive", required=True, action='append', help="Drive spec format: LABEL:SIZE_MiB")
     parser.add_argument("--dry-run", action="store_true", help="Simulate without copying files")
     args = parser.parse_args()
 
